@@ -1,7 +1,19 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.8.0;
 
-contract IDiamondCut {
-    function IDiamondCut(){
+interface IDiamondCut {
 
+    enum FacetCutAction{Add, Replace, Remove}
+    struct FacetCut{
+        address facetAddress;
+        FacetCutAction action;
+        bytes4[] functionSelectors;
     }
+
+    function diamondCut(
+        FacetCut[] memory _facets,
+        address _init,
+        bytes calldata _calldata
+    ) external;
+
+    event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
 }
