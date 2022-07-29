@@ -4,20 +4,38 @@ import {LibDiamond} from "./libraries/LibDiamond.sol";
 import {IDiamondCut} from "./interfaces/IDiamondCut.sol";
 
 
+
 contract Diamond {
-    constructor(address contractOwner, address _diamondFacetCut) payable {
+    // @param contractOwner is the contract owner
+    constructor(address contractOwner, address diamondAppAddress) payable {
         LibDiamond.setContractOwner(contractOwner);
 
         // Add the diamondCut external function from the diamondCutFacet
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         bytes4[] memory functionSelectors =new bytes4[](1);
         functionSelectors[0] = IDiamondCut.diamondCut.selector;
-        cut[0] = IDiamondCut.FacetCut({facetAddress: _diamondFacetCut, action: IDiamondCut.FacetCutAction.Add, functionSelectors:functionSelectors
+        cut[0] = IDiamondCut.FacetCut({facetAddress: diamondAppAddress, action: IDiamondCut.FacetCutAction.Add, functionSelectors:functionSelectors
         });
-//        LibDiamond.diamondCut(cut, address(0), "");
-        LibDiamond.diamondCut(cut, address(0), "" );
+        LibDiamond.diamondCut(cut, address(0), "");
 
     }
+
+    // @notice
+    // below functions are for test purpose
+    function selectorLength() external view returns(uint256 selectorLength_){
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        selectorLength_ = ds.selectors.length;
+    }
+
+    function allSelectors() external view returns (bytes4[] memory allSelectors_){
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        uint256 selectorLength_ = ds.selectors.length;
+        allSelectors_ = new bytes4[](selectorLength_);
+        for(uint256 index; index< selectorLength_; index++){
+            allSelectors_[index]=ds.selectors[index];
+        }
+    }
+
 
     fallback() external payable{
         LibDiamond.DiamondStorage storage ds;

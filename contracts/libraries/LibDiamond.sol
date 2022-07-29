@@ -52,15 +52,17 @@ library LibDiamond {
         for(uint256 facetIndex; facetIndex < _diamondCut.length; facetIndex++){
             IDiamondCut.FacetCutAction  action = _diamondCut[facetIndex].action;
             if (action == IDiamondCut.FacetCutAction.Add){
-
+                addFacetCut(_diamondCut[facetIndex].facetAddress, _diamondCut[facetIndex].functionSelectors);
             }else if(action == IDiamondCut.FacetCutAction.Replace){
-
+                replaceFacetCut(_diamondCut[facetIndex].facetAddress, _diamondCut[facetIndex].functionSelectors);
             }else if(action == IDiamondCut.FacetCutAction.Remove){
-
+                removeFacetCut(_diamondCut[facetIndex].facetAddress, _diamondCut[facetIndex].functionSelectors);
             }else{
-
+                revert("LibDiamond: Incorrect FacetCutAction");
             }
         }
+        emit DiamondCut(_diamondCut, _init, _calldata);
+        initializeDiamondCut(_init, _calldata);
     }
 
     function addFacetCut(address _facetAddress, bytes4[] memory _functionSelectors) internal {
@@ -100,7 +102,7 @@ library LibDiamond {
         require(_functionSelectors.length > 0 ,"LibDiamond: no function selectors");
         DiamondStorage storage ds = diamondStorage();
         uint16 selectorCount = uint16(ds.selectors.length);
-
+        require(_facetAddress == address(0), "LibDiamond: address must be address(0) ");
         for(uint256 selectorIndex; selectorIndex < _functionSelectors.length; selectorIndex++){
             bytes4 selector = _functionSelectors[selectorIndex];
             FacetAddressAndSelectorPosition memory facetAddressAndSelectorPosition = ds.facetAddressAndSelectorPosition[selector];
@@ -122,7 +124,7 @@ library LibDiamond {
     }
 
 
-    function initializeDiamondCut(address _init, bytes calldata _calldata) internal{
+    function initializeDiamondCut(address _init, bytes memory _calldata) internal{
         if(_init == address (0)){
             require(_calldata.length == 0, "LibDiamond: init address is 0 while calldata is not empty");
         }else{
@@ -147,7 +149,7 @@ library LibDiamond {
     function enforceHasContractCode(
         address _contract,
         string memory _errorMsg
-    )internal {
+    )internal view {
         uint256 codeSize;
         assembly{
             codeSize := extcodesize(_contract)
